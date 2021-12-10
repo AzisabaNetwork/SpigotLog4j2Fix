@@ -1,0 +1,8 @@
+name: SpigotLog4j2Fix
+main: net.azisaba.spigotLog4j2Fix.plugin.SpigotLog4j2FixPlugin
+version: @version@
+load: STARTUP
+loadbefore:
+  - ViaVersion
+  - ViaBackwards
+  - ProtocolLib
