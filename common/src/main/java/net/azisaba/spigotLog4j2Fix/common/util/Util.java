@@ -188,7 +188,7 @@ public class Util {
     @Nullable
     public static String removeSomething(@Nullable String input) {
         if (input == null) return null;
-        return input.replaceAll("(?i)\\$\\{(.*):(.*)}", "");
+        return ChatColor.stripColor(input).replaceAll("(?i)\\$\\{(.*):(.*)}", "");
     }
 
     @Contract("null -> false")
@@ -203,7 +203,7 @@ public class Util {
     @Contract("null -> false")
     public static boolean isTaintedString(@Nullable String input) {
         if (input == null) return false;
-        String s = ChatColor.stripColor(removeSomething(input));
+        String s = removeSomething(input);
         if (s.length() != input.length()) return true;
         return s.toLowerCase(Locale.ROOT).contains("jndi:ldap");
     }
