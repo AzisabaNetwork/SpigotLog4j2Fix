@@ -18,7 +18,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.PacketPlayInChat;
 import net.minecraft.network.protocol.game.PacketPlayInItemName;
-import net.minecraft.network.protocol.game.PacketPlayInSetCreativeSlot;
 import net.minecraft.network.protocol.game.PacketPlayOutChat;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
 import net.minecraft.network.protocol.game.PacketPlayOutMapChunk;
@@ -110,8 +109,6 @@ public class VersionUtil {
         Packet<?> packet = packetData.getPacket();
         if (packet instanceof PacketPlayInChat) {
             packetData.modifyField("b", Util::sanitizeString);
-        } else if (packet instanceof PacketPlayInSetCreativeSlot p) {
-            filterItemStack(p.getItemStack());
         } else if (packet instanceof PacketPlayInItemName) {
             packetData.modifyField("a", Util::sanitizeString);
         }

@@ -17,7 +17,6 @@ import net.minecraft.server.v1_15_R1.NBTTagString;
 import net.minecraft.server.v1_15_R1.Packet;
 import net.minecraft.server.v1_15_R1.PacketPlayInChat;
 import net.minecraft.server.v1_15_R1.PacketPlayInItemName;
-import net.minecraft.server.v1_15_R1.PacketPlayInSetCreativeSlot;
 import net.minecraft.server.v1_15_R1.PacketPlayOutChat;
 import net.minecraft.server.v1_15_R1.PacketPlayOutCombatEvent;
 import net.minecraft.server.v1_15_R1.PacketPlayOutEntityEquipment;
@@ -106,8 +105,6 @@ public class VersionUtil {
         Packet<?> packet = packetData.getPacket();
         if (packet instanceof PacketPlayInChat) {
             packetData.modifyField("a", Util::sanitizeString);
-        } else if (packet instanceof PacketPlayInSetCreativeSlot) {
-            filterItemStack(((PacketPlayInSetCreativeSlot) packet).getItemStack());
         } else if (packet instanceof PacketPlayInItemName) {
             packetData.modifyField("a", Util::sanitizeString);
         }

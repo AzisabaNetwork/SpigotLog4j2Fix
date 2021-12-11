@@ -8,6 +8,7 @@ import net.minecraft.server.v1_12_R1.ChatComponentScore;
 import net.minecraft.server.v1_12_R1.ChatComponentSelector;
 import net.minecraft.server.v1_12_R1.ChatComponentText;
 import net.minecraft.server.v1_12_R1.ChatMessage;
+import net.minecraft.server.v1_12_R1.ChatModifier;
 import net.minecraft.server.v1_12_R1.IChatBaseComponent;
 import net.minecraft.server.v1_12_R1.ItemStack;
 import net.minecraft.server.v1_12_R1.NBTBase;
@@ -16,7 +17,6 @@ import net.minecraft.server.v1_12_R1.NBTTagList;
 import net.minecraft.server.v1_12_R1.NBTTagString;
 import net.minecraft.server.v1_12_R1.Packet;
 import net.minecraft.server.v1_12_R1.PacketPlayInChat;
-import net.minecraft.server.v1_12_R1.PacketPlayInSetCreativeSlot;
 import net.minecraft.server.v1_12_R1.PacketPlayOutChat;
 import net.minecraft.server.v1_12_R1.PacketPlayOutCombatEvent;
 import net.minecraft.server.v1_12_R1.PacketPlayOutEntityEquipment;
@@ -94,8 +94,6 @@ public class VersionUtil {
         Packet<?> packet = packetData.getPacket();
         if (packet instanceof PacketPlayInChat) {
             packetData.modifyField("a", Util::sanitizeString);
-        } else if (packet instanceof PacketPlayInSetCreativeSlot) {
-            filterItemStack(((PacketPlayInSetCreativeSlot) packet).getItemStack());
         }
         return Collections.singletonList(packet);
     }
@@ -154,7 +152,9 @@ public class VersionUtil {
                     if (o != null) args.add(o);
                 }
             }
+            ChatModifier chatModifier = component.getChatModifier();
             component = new ChatMessage(Util.sanitizeString(chatMessage.i()), args.toArray());
+            component.setChatModifier(chatModifier);
         }
         if (component instanceof ChatBaseComponent) {
             ChatBaseComponent chatBaseComponent = (ChatBaseComponent) component;
