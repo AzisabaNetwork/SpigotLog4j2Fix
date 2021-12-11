@@ -1,37 +1,34 @@
-package net.azisaba.spigotLog4j2Fix.v1_16_R3.util;
+package net.azisaba.spigotLog4j2Fix.v1_15_R1.util;
 
-import com.mojang.datafixers.util.Pair;
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
 import net.azisaba.spigotLog4j2Fix.common.util.Util;
-import net.minecraft.server.v1_16_R3.ChatBaseComponent;
-import net.minecraft.server.v1_16_R3.ChatComponentText;
-import net.minecraft.server.v1_16_R3.ChatMessage;
-import net.minecraft.server.v1_16_R3.ChatModifier;
-import net.minecraft.server.v1_16_R3.EnumItemSlot;
-import net.minecraft.server.v1_16_R3.IChatBaseComponent;
-import net.minecraft.server.v1_16_R3.IChatMutableComponent;
-import net.minecraft.server.v1_16_R3.ItemStack;
-import net.minecraft.server.v1_16_R3.MerchantRecipe;
-import net.minecraft.server.v1_16_R3.MerchantRecipeList;
-import net.minecraft.server.v1_16_R3.NBTBase;
-import net.minecraft.server.v1_16_R3.NBTTagCompound;
-import net.minecraft.server.v1_16_R3.NBTTagList;
-import net.minecraft.server.v1_16_R3.NBTTagString;
-import net.minecraft.server.v1_16_R3.Packet;
-import net.minecraft.server.v1_16_R3.PacketPlayInChat;
-import net.minecraft.server.v1_16_R3.PacketPlayInItemName;
-import net.minecraft.server.v1_16_R3.PacketPlayInSetCreativeSlot;
-import net.minecraft.server.v1_16_R3.PacketPlayOutChat;
-import net.minecraft.server.v1_16_R3.PacketPlayOutCombatEvent;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityEquipment;
-import net.minecraft.server.v1_16_R3.PacketPlayOutMapChunk;
-import net.minecraft.server.v1_16_R3.PacketPlayOutNBTQuery;
-import net.minecraft.server.v1_16_R3.PacketPlayOutOpenWindow;
-import net.minecraft.server.v1_16_R3.PacketPlayOutOpenWindowMerchant;
-import net.minecraft.server.v1_16_R3.PacketPlayOutSetSlot;
-import net.minecraft.server.v1_16_R3.PacketPlayOutTileEntityData;
-import net.minecraft.server.v1_16_R3.PacketPlayOutTitle;
-import net.minecraft.server.v1_16_R3.PacketPlayOutWindowItems;
+import net.minecraft.server.v1_15_R1.ChatBaseComponent;
+import net.minecraft.server.v1_15_R1.ChatComponentText;
+import net.minecraft.server.v1_15_R1.ChatMessage;
+import net.minecraft.server.v1_15_R1.ChatModifier;
+import net.minecraft.server.v1_15_R1.IChatBaseComponent;
+import net.minecraft.server.v1_15_R1.ItemStack;
+import net.minecraft.server.v1_15_R1.MerchantRecipe;
+import net.minecraft.server.v1_15_R1.MerchantRecipeList;
+import net.minecraft.server.v1_15_R1.NBTBase;
+import net.minecraft.server.v1_15_R1.NBTTagCompound;
+import net.minecraft.server.v1_15_R1.NBTTagList;
+import net.minecraft.server.v1_15_R1.NBTTagString;
+import net.minecraft.server.v1_15_R1.Packet;
+import net.minecraft.server.v1_15_R1.PacketPlayInChat;
+import net.minecraft.server.v1_15_R1.PacketPlayInItemName;
+import net.minecraft.server.v1_15_R1.PacketPlayInSetCreativeSlot;
+import net.minecraft.server.v1_15_R1.PacketPlayOutChat;
+import net.minecraft.server.v1_15_R1.PacketPlayOutCombatEvent;
+import net.minecraft.server.v1_15_R1.PacketPlayOutEntityEquipment;
+import net.minecraft.server.v1_15_R1.PacketPlayOutMapChunk;
+import net.minecraft.server.v1_15_R1.PacketPlayOutNBTQuery;
+import net.minecraft.server.v1_15_R1.PacketPlayOutOpenWindow;
+import net.minecraft.server.v1_15_R1.PacketPlayOutOpenWindowMerchant;
+import net.minecraft.server.v1_15_R1.PacketPlayOutSetSlot;
+import net.minecraft.server.v1_15_R1.PacketPlayOutTileEntityData;
+import net.minecraft.server.v1_15_R1.PacketPlayOutTitle;
+import net.minecraft.server.v1_15_R1.PacketPlayOutWindowItems;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,11 +86,7 @@ public class VersionUtil {
         } else if (packet instanceof PacketPlayOutNBTQuery) {
             filterNBTTagCompound(packetData.getField("b"));
         } else if (packet instanceof PacketPlayOutEntityEquipment) {
-            if (packetData.getField("b") != null) {
-                for (Pair<EnumItemSlot, ItemStack> pair : packetData.<List<Pair<EnumItemSlot, ItemStack>>>getField("b")) {
-                    filterItemStack(pair.getSecond());
-                }
-            }
+            filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutSetSlot) {
             filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutTileEntityData) {
@@ -140,7 +133,8 @@ public class VersionUtil {
                 newMap.put(key, filterNBTBase(value));
             }
         });
-        Util.setField(NBTTagCompound.class, "map", tag, newMap);
+        map.clear();
+        map.putAll(newMap);
         return tag;
     }
 
@@ -179,7 +173,7 @@ public class VersionUtil {
             }
             ChatModifier cm = component.getChatModifier();
             component = new ChatMessage(Util.sanitizeString(chatMessage.getKey()), args.toArray());
-            ((ChatMessage) component).setChatModifier(cm);
+            component.setChatModifier(cm);
         }
         if (component instanceof ChatBaseComponent) {
             ChatBaseComponent chatBaseComponent = (ChatBaseComponent) component;
@@ -193,10 +187,10 @@ public class VersionUtil {
         }
         if (component instanceof ChatComponentText) {
             ChatComponentText text = (ChatComponentText) component;
-            if (Util.isTaintedString(text.h())) {
+            if (Util.isTaintedString(text.getText())) {
                 ChatModifier cm = component.getChatModifier();
-                component = new ChatComponentText(Util.sanitizeString(text.h())).setChatModifier(text.getChatModifier());
-                ((IChatMutableComponent) component).setChatModifier(cm);
+                component = new ChatComponentText(Util.sanitizeString(text.getText())).setChatModifier(text.getChatModifier());
+                component.setChatModifier(cm);
             }
         }
         if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {

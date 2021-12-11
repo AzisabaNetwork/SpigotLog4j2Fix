@@ -18,4 +18,9 @@ public interface VersionDependant {
      * @return packets which would be sent to a player. Returning empty list will effectively cancel the packet.
      */
     List<Object> processOutgoingPacket(@NotNull PacketData packetData);
+
+    /**
+     * @return packets which would be sent to server. Returning empty list will effectively cancel the packet.
+     */
+    List<Object> processIncomingPacket(@NotNull PacketData packetData);
 }

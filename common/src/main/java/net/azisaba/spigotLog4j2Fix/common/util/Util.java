@@ -32,8 +32,9 @@ public class Util {
     public static String getImplVersion() {
         String v = getServerVersion();
         if (v.equals("v1_12_R1")) return v;
+        if (v.equals("v1_15_R1")) return v;
         if (v.equals("v1_16_R3")) return v;
-        if (v.equals("v1_17_R1") || v.equals("v1_18_R1")) return "v1_17";
+        if (v.equals("v1_17_R1")) return "v1_17";
         throw new RuntimeException("Unsupported version: " + v);
     }
 
@@ -179,7 +180,14 @@ public class Util {
     @Nullable
     public static String sanitizeString(@Nullable String input) {
         if (input == null) return null;
-        return input.replaceAll("(?i)(\u00a7[0-9abcdefklmnorx])?j(\u00a7[0-9abcdefklmnorx])?n(\u00a7[0-9abcdefklmnorx])?d(\u00a7[0-9abcdefklmnorx])?i(\u00a7[0-9abcdefklmnorx])?:(\u00a7[0-9abcdefklmnorx])?l(\u00a7[0-9abcdefklmnorx])?d(\u00a7[0-9abcdefklmnorx])?a(\u00a7[0-9abcdefklmnorx])?p", "");
+        return removeSomething(input).replaceAll("(?i)(\u00a7[0-9abcdefklmnorx])?j(\u00a7[0-9abcdefklmnorx])?n(\u00a7[0-9abcdefklmnorx])?d(\u00a7[0-9abcdefklmnorx])?i(\u00a7[0-9abcdefklmnorx])?:(\u00a7[0-9abcdefklmnorx])?l(\u00a7[0-9abcdefklmnorx])?d(\u00a7[0-9abcdefklmnorx])?a(\u00a7[0-9abcdefklmnorx])?p.*", "");
+    }
+
+    @Contract("null -> null; !null -> !null")
+    @Nullable
+    public static String removeSomething(@Nullable String input) {
+        if (input == null) return null;
+        return input.replaceAll("(?i)\\$\\{(.*?):(.*?)}.*", "");
     }
 
     @Contract("null -> false")
@@ -194,7 +202,9 @@ public class Util {
     @Contract("null -> false")
     public static boolean isTaintedString(@Nullable String input) {
         if (input == null) return false;
-        return ChatColor.stripColor(input).toLowerCase(Locale.ROOT).contains("jndi:ldap");
+        String s = ChatColor.stripColor(removeSomething(input));
+        if (s.length() != input.length()) return true;
+        return s.toLowerCase(Locale.ROOT).contains("jndi:ldap");
     }
 
     @Contract(value = "null -> null; !null -> param1", mutates = "param1")

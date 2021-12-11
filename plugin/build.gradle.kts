@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(project(":v1_12_R1"))
+    implementation(project(":v1_15_R1"))
     implementation(project(":v1_16_R3"))
     implementation(project(":v1_17"))
 }

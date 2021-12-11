@@ -9,15 +9,32 @@ import net.minecraft.server.v1_12_R1.ChatComponentSelector;
 import net.minecraft.server.v1_12_R1.ChatComponentText;
 import net.minecraft.server.v1_12_R1.ChatMessage;
 import net.minecraft.server.v1_12_R1.IChatBaseComponent;
+import net.minecraft.server.v1_12_R1.ItemStack;
+import net.minecraft.server.v1_12_R1.NBTBase;
+import net.minecraft.server.v1_12_R1.NBTTagCompound;
+import net.minecraft.server.v1_12_R1.NBTTagList;
+import net.minecraft.server.v1_12_R1.NBTTagString;
 import net.minecraft.server.v1_12_R1.Packet;
+import net.minecraft.server.v1_12_R1.PacketPlayInChat;
+import net.minecraft.server.v1_12_R1.PacketPlayInSetCreativeSlot;
 import net.minecraft.server.v1_12_R1.PacketPlayOutChat;
 import net.minecraft.server.v1_12_R1.PacketPlayOutCombatEvent;
+import net.minecraft.server.v1_12_R1.PacketPlayOutEntityEquipment;
+import net.minecraft.server.v1_12_R1.PacketPlayOutMapChunk;
+import net.minecraft.server.v1_12_R1.PacketPlayOutOpenWindow;
+import net.minecraft.server.v1_12_R1.PacketPlayOutSetSlot;
+import net.minecraft.server.v1_12_R1.PacketPlayOutTileEntityData;
+import net.minecraft.server.v1_12_R1.PacketPlayOutTitle;
+import net.minecraft.server.v1_12_R1.PacketPlayOutWindowItems;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -40,8 +57,89 @@ public class VersionUtil {
             if (packetData.modifyField("e", VersionUtil::filterComponent) == null) {
                 return Collections.emptyList();
             }
+        } else if (packet instanceof PacketPlayOutTitle) {
+            if (packetData.getField("b") != null) {
+                if (packetData.modifyField("b", VersionUtil::filterComponent) == null) {
+                    return Collections.emptyList();
+                }
+            }
+        } else if (packet instanceof PacketPlayOutWindowItems) {
+            for (ItemStack stack : packetData.<List<ItemStack>>getField("b")) {
+                filterItemStack(stack);
+            }
+        } else if (packet instanceof PacketPlayOutOpenWindow) {
+            packetData.modifyField("b", Util::sanitizeString);
+            if (packetData.getField("c") != null) {
+                if (packetData.modifyField("c", VersionUtil::filterComponent) == null) {
+                    return Collections.emptyList();
+                }
+            }
+        } else if (packet instanceof PacketPlayOutEntityEquipment) {
+            filterItemStack(packetData.getField("c"));
+        } else if (packet instanceof PacketPlayOutSetSlot) {
+            filterItemStack(packetData.getField("c"));
+        } else if (packet instanceof PacketPlayOutTileEntityData) {
+            filterNBTTagCompound(packetData.getField("c"));
+        } else if (packet instanceof PacketPlayOutMapChunk) {
+            if (packetData.getField("e") != null) {
+                for (NBTTagCompound tag : packetData.<List<NBTTagCompound>>getField("e")) {
+                    filterNBTTagCompound(tag);
+                }
+            }
         }
         return Collections.singletonList(packet);
+    }
+
+    public static List<Object> processIncomingPacket(@NotNull PacketData packetData) {
+        Packet<?> packet = packetData.getPacket();
+        if (packet instanceof PacketPlayInChat) {
+            packetData.modifyField("a", Util::sanitizeString);
+        } else if (packet instanceof PacketPlayInSetCreativeSlot) {
+            filterItemStack(((PacketPlayInSetCreativeSlot) packet).getItemStack());
+        }
+        return Collections.singletonList(packet);
+    }
+
+    @Contract(value = "_ -> param1", mutates = "param1")
+    @Nullable
+    public static ItemStack filterItemStack(@Nullable ItemStack item) {
+        if (item == null) return null;
+        item.setTag(filterNBTTagCompound(item.getTag()));
+        return item;
+    }
+
+    @Contract(value = "_ -> param1", mutates = "param1")
+    @Nullable
+    public static NBTTagCompound filterNBTTagCompound(@Nullable NBTTagCompound tag) {
+        if (tag == null) return null;
+        Map<String, NBTBase> map = new HashMap<>(Util.getField(NBTTagCompound.class, "map", tag));
+        Map<String, NBTBase> newMap = new HashMap<>();
+        map.forEach((key, value) -> {
+            if (!Util.isTaintedString(key)) {
+                newMap.put(key, filterNBTBase(value));
+            }
+        });
+        Util.setField(NBTTagCompound.class, "map", tag, newMap);
+        return tag;
+    }
+
+    @Contract(value = "_ -> param1", mutates = "param1")
+    @Nullable
+    public static NBTBase filterNBTBase(@Nullable NBTBase value) {
+        if (value instanceof NBTTagString) {
+            if (Util.isTaintedString(((NBTTagString) value).c_())) {
+                return new NBTTagString(Util.sanitizeString(((NBTTagString) value).c_()));
+            }
+        } else if (value instanceof NBTTagCompound) {
+            return filterNBTTagCompound((NBTTagCompound) value);
+        } else if (value instanceof NBTTagList) {
+            NBTTagList newList = new NBTTagList();
+            for (NBTBase entry : Util.<List<NBTBase>>getField(NBTTagList.class, "list", value)) {
+                newList.add(filterNBTBase(entry));
+            }
+            return newList;
+        }
+        return value;
     }
 
     @Nullable
@@ -56,7 +154,7 @@ public class VersionUtil {
                     if (o != null) args.add(o);
                 }
             }
-            component = new ChatMessage(chatMessage.i().replaceAll("(?i)jndi:ldap", ""), args.toArray());
+            component = new ChatMessage(Util.sanitizeString(chatMessage.i()), args.toArray());
         }
         if (component instanceof ChatBaseComponent) {
             ChatBaseComponent chatBaseComponent = (ChatBaseComponent) component;
@@ -101,19 +199,19 @@ public class VersionUtil {
     public static ChatBaseComponent newInstance(@NotNull ChatBaseComponent component) {
         if (component instanceof ChatComponentKeybind) {
             ChatComponentKeybind c = (ChatComponentKeybind) component;
-            return new ChatComponentKeybind(c.h().replaceAll("(?i)jndi:ldap", ""));
+            return new ChatComponentKeybind(Util.sanitizeString(c.h()));
         } else if (component instanceof ChatComponentText) {
             ChatComponentText c = (ChatComponentText) component;
-            return new ChatComponentText(c.g().replaceAll("(?i)jndi:ldap", ""));
+            return new ChatComponentText(Util.sanitizeString(c.g()));
         } else if (component instanceof ChatComponentScore) {
             ChatComponentScore c = (ChatComponentScore) component;
-            return new ChatComponentScore(c.g().replaceAll("(?i)jndi:ldap", ""), c.h().replaceAll("(?i)jndi:ldap", ""));
+            return new ChatComponentScore(Util.sanitizeString(c.g()), Util.sanitizeString(c.h()));
         } else if (component instanceof ChatComponentSelector) {
             ChatComponentSelector c = (ChatComponentSelector) component;
-            return new ChatComponentSelector(c.g().replaceAll("(?i)jndi:ldap", ""));
+            return new ChatComponentSelector(Util.sanitizeString(c.g()));
         } else if (component instanceof ChatMessage) {
             ChatMessage c = (ChatMessage) component;
-            return new ChatMessage(c.i().replaceAll("(?i)jndi:ldap", ""), c.j());
+            return new ChatMessage(Util.sanitizeString(c.i()), c.j());
         } else {
             throw new RuntimeException("Unsupported ChatBaseComponent type: " + component.getClass().getTypeName());
         }

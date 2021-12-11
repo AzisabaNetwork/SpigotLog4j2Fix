@@ -12,7 +12,7 @@ public class FilterComponentTest {
         ChatMessage chatMessage = new ChatMessage(
                 "chat.type.announcement",
                 new ChatComponentText("Server"),
-                new ChatComponentText("jndi:ldap")
+                new ChatComponentText("jndi:ld${upper:a}${lower:p}noitisjustexample")
         );
         IChatBaseComponent filtered = VersionUtil.filterComponent(chatMessage);
         IChatBaseComponent expected = new ChatMessage("chat.type.announcement", new ChatComponentText("Server"), new ChatComponentText(""));

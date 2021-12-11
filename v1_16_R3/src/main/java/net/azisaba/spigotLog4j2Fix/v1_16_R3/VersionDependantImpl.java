@@ -25,7 +25,12 @@ public class VersionDependantImpl implements VersionDependant {
     }
 
     @Override
-    public List<Object> processOutgoingPacket(@NotNull PacketData packet) {
-        return VersionUtil.processOutgoingPacket(packet);
+    public List<Object> processOutgoingPacket(@NotNull PacketData packetData) {
+        return VersionUtil.processOutgoingPacket(packetData);
+    }
+
+    @Override
+    public List<Object> processIncomingPacket(@NotNull PacketData packetData) {
+        return VersionUtil.processIncomingPacket(packetData);
     }
 }
