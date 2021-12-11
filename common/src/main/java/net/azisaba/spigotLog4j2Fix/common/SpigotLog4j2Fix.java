@@ -1,10 +1,8 @@
 package net.azisaba.spigotLog4j2Fix.common;
 
-import javassist.ClassPool;
-import javassist.NotFoundException;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -31,19 +29,8 @@ public class SpigotLog4j2Fix {
         return getAPI().getLogger();
     }
 
-    static {
-        String cp;
-        try {
-            cp = SpigotLog4j2Fix.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-        } catch (URISyntaxException e) {
-            cp = null;
-        }
-        if (cp != null) {
-            try {
-                ClassPool.getDefault().appendClassPath(cp);
-            } catch (NotFoundException e) {
-                e.printStackTrace();
-            }
-        }
+    @NotNull
+    public static Plugin getPlugin() {
+        return getAPI().getPlugin();
     }
 }

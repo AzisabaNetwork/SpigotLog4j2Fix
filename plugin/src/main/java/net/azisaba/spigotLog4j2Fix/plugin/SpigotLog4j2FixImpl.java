@@ -4,6 +4,7 @@ import net.azisaba.spigotLog4j2Fix.common.ISpigotLog4j2Fix;
 import net.azisaba.spigotLog4j2Fix.common.SpigotLog4j2Fix;
 import net.azisaba.spigotLog4j2Fix.common.VersionDependant;
 import net.azisaba.spigotLog4j2Fix.common.util.Util;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Logger;
@@ -28,7 +29,18 @@ public class SpigotLog4j2FixImpl implements ISpigotLog4j2Fix {
     @NotNull
     @Override
     public Logger getLogger() {
-        return SpigotLog4j2FixPlugin.getInstance().getLogger();
+        return getPlugin().getLogger();
+    }
+
+    @NotNull
+    @Override
+    public Plugin getPlugin() {
+        return SpigotLog4j2FixPlugin.getInstance();
+    }
+
+    @Override
+    public boolean shouldDoLazy() {
+        return getPlugin().getConfig().getBoolean("lazy", true);
     }
 
     static void init() {}

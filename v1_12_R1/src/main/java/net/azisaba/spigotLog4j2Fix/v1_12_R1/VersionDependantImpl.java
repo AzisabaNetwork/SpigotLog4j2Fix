@@ -1,12 +1,12 @@
-package net.azisaba.spigotLog4j2Fix.v1_17;
+package net.azisaba.spigotLog4j2Fix.v1_12_R1;
 
 import io.netty.channel.Channel;
 import net.azisaba.spigotLog4j2Fix.common.VersionDependant;
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
-import net.azisaba.spigotLog4j2Fix.v1_17.listener.EventListeners;
-import net.azisaba.spigotLog4j2Fix.v1_17.util.VersionUtil;
+import net.azisaba.spigotLog4j2Fix.v1_12_R1.listener.EventListeners;
+import net.azisaba.spigotLog4j2Fix.v1_12_R1.util.VersionUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -21,11 +21,11 @@ public class VersionDependantImpl implements VersionDependant {
 
     @Override
     public @NotNull Channel getChannel(@NotNull Player player) {
-        return ((CraftPlayer) player).getHandle().b.a.k;
+        return ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel;
     }
 
     @Override
-    public List<Object> processOutgoingPacket(@NotNull PacketData packet) {
-        return VersionUtil.processOutgoingPacket(packet);
+    public List<Object> processOutgoingPacket(@NotNull PacketData packetData) {
+        return VersionUtil.processOutgoingPacket(packetData);
     }
 }

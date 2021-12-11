@@ -1,7 +1,3 @@
-repositories {
-    mavenLocal()
-}
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(16))
@@ -20,4 +16,5 @@ configurations {
 
 dependencies {
     compileOnly("org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT")
+    testImplementation("org.spigotmc:spigot:1.17.1-R0.1-SNAPSHOT")
 }

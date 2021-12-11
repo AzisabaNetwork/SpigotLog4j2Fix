@@ -1,17 +1,16 @@
-package net.azisaba.spigotLog4j2Fix.v1_17.util;
+package net.azisaba.spigotLog4j2Fix.v1_16_R3.util;
 
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
 import net.azisaba.spigotLog4j2Fix.common.util.Util;
-import net.minecraft.network.chat.ChatBaseComponent;
-import net.minecraft.network.chat.ChatComponentText;
-import net.minecraft.network.chat.ChatMessage;
-import net.minecraft.network.chat.ChatModifier;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.network.chat.IChatMutableComponent;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
-import net.minecraft.network.protocol.game.PacketPlayOutChat;
+import net.minecraft.server.v1_16_R3.ChatBaseComponent;
+import net.minecraft.server.v1_16_R3.ChatComponentText;
+import net.minecraft.server.v1_16_R3.ChatMessage;
+import net.minecraft.server.v1_16_R3.ChatModifier;
+import net.minecraft.server.v1_16_R3.IChatBaseComponent;
+import net.minecraft.server.v1_16_R3.IChatMutableComponent;
+import net.minecraft.server.v1_16_R3.Packet;
+import net.minecraft.server.v1_16_R3.PacketPlayOutChat;
+import net.minecraft.server.v1_16_R3.PacketPlayOutCombatEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,8 +23,9 @@ import java.util.stream.Collectors;
 public class VersionUtil {
     public static List<Object> processOutgoingPacket(@NotNull PacketData packetData) {
         Packet<?> packet = packetData.getPacket();
-        if (packet instanceof PacketPlayOutChat p) {
-            if (p.b() != null) {
+        if (packet instanceof PacketPlayOutChat) {
+            PacketPlayOutChat p = (PacketPlayOutChat) packet;
+            if (packetData.getField("a") != null) {
                 if (packetData.modifyField("a", VersionUtil::filterComponent) == null) {
                     return Collections.emptyList(); // cancel packet
                 }
@@ -35,10 +35,13 @@ public class VersionUtil {
                     return Collections.emptyList();
                 }
             }
-        } else if (packet instanceof ClientboundPlayerCombatKillPacket) {
-            if (packetData.modifyField("c", VersionUtil::filterComponent) == null) {
+            System.err.println((Object) packetData.getField("a"));
+            System.err.println(java.util.Arrays.toString(p.components));
+        } else if (packet instanceof PacketPlayOutCombatEvent) {
+            if (packetData.modifyField("e", VersionUtil::filterComponent) == null) {
                 return Collections.emptyList(); // cancel packet
             }
+            System.err.println((Object) packetData.getField("e"));
         }
         return Collections.singletonList(packet);
     }
@@ -46,7 +49,8 @@ public class VersionUtil {
     @Nullable
     public static IChatBaseComponent filterComponent(@Nullable IChatBaseComponent component) {
         if (component == null) return null;
-        if (component instanceof ChatMessage chatMessage) {
+        if (component instanceof ChatMessage) {
+            ChatMessage chatMessage = (ChatMessage) component;
             List<Object> args = new ArrayList<>();
             for (Object o : chatMessage.getArgs()) {
                 if (o instanceof IChatBaseComponent) {
@@ -60,16 +64,18 @@ public class VersionUtil {
             component = new ChatMessage(Util.sanitizeString(chatMessage.getKey()), args.toArray());
             ((ChatMessage) component).setChatModifier(cm);
         }
-        if (component instanceof ChatBaseComponent chatBaseComponent) {
+        if (component instanceof ChatBaseComponent) {
+            ChatBaseComponent chatBaseComponent = (ChatBaseComponent) component;
             List<IChatBaseComponent> list = component.getSiblings().stream().map(VersionUtil::filterComponent).filter(Objects::nonNull).collect(Collectors.toList());
             if (!Util.listEquals(list, chatBaseComponent.getSiblings())) {
                 component = chatBaseComponent.g();
                 // Add siblings
-                Util.<List<IChatBaseComponent>>getField(ChatBaseComponent.class, "a", component).clear();
+                Util.<List<IChatBaseComponent>>getField(ChatBaseComponent.class, "siblings", component).clear();
                 for (IChatBaseComponent c : list) ((ChatBaseComponent) component).addSibling(c);
             }
         }
-        if (component instanceof ChatComponentText text) {
+        if (component instanceof ChatComponentText) {
+            ChatComponentText text = (ChatComponentText) component;
             if (Util.isTaintedString(text.h())) {
                 ChatModifier cm = component.getChatModifier();
                 component = new ChatComponentText(Util.sanitizeString(text.h())).setChatModifier(text.getChatModifier());
@@ -77,6 +83,8 @@ public class VersionUtil {
             }
         }
         if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {
+            return null;
+        } else {
             try {
                 List<IChatBaseComponent> s = component.getSiblings();
                 List<IChatBaseComponent> list = new ArrayList<>();
@@ -94,8 +102,6 @@ public class VersionUtil {
             } catch (UnsupportedOperationException e) {
                 return null;
             }
-            return null;
-        } else {
             return component;
         }
     }
