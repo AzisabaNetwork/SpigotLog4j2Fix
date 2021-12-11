@@ -200,8 +200,6 @@ public class VersionUtil {
             }
         }
         if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {
-            return null;
-        } else {
             try {
                 List<IChatBaseComponent> s = component.getSiblings();
                 List<IChatBaseComponent> list = new ArrayList<>();
@@ -212,13 +210,15 @@ public class VersionUtil {
                 for (IChatBaseComponent c : list) {
                     if (c == null || list.get(i) == null) continue;
                     if (!Objects.equals(c, list.get(i))) {
-                        list.set(i, list.get(i));
+                        s.set(i, list.get(i));
                     }
                     i++;
                 }
+                return component;
             } catch (UnsupportedOperationException e) {
                 return null;
             }
+        } else {
             return component;
         }
     }

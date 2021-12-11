@@ -204,14 +204,14 @@ public class VersionUtil {
                 for (IChatBaseComponent c : list) {
                     if (c == null || list.get(i) == null) continue;
                     if (!Objects.equals(c, list.get(i))) {
-                        list.set(i, list.get(i));
+                        s.set(i, list.get(i));
                     }
                     i++;
                 }
+                return component;
             } catch (UnsupportedOperationException e) {
                 return null;
             }
-            return null;
         } else {
             return component;
         }

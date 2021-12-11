@@ -102,6 +102,7 @@ public class Util {
         if (clazz == null) clazz = instance.getClass();
         List<T> list = getField(clazz, name, instance);
         if (list == null) return null;
+        list = new ArrayList<>(list);
         List<T> toAdd = new ArrayList<>();
         for (T t : list) toAdd.add(mapFunction.apply(t));
         list.clear();
@@ -187,7 +188,7 @@ public class Util {
     @Nullable
     public static String removeSomething(@Nullable String input) {
         if (input == null) return null;
-        return input.replaceAll("(?i)\\$\\{(.*?):(.*?)}.*", "");
+        return input.replaceAll("(?i)\\$\\{(.*):(.*)}", "");
     }
 
     @Contract("null -> false")
