@@ -26,4 +26,15 @@ public class PacketUtil {
             }, 10);
         }
     }
+
+    public static void eject(@NotNull Player player) {
+        try {
+            if (SpigotLog4j2Fix.getVersionDependant().getChannel(player).pipeline().get("spigotLog4j2Fix") != null) {
+                SpigotLog4j2Fix.getVersionDependant().getChannel(player).pipeline().remove("spigotLog4j2Fix");
+                SpigotLog4j2Fix.getLogger().info("Ejected packet handler from " + player.getName());
+            }
+        } catch (RuntimeException e) {
+            SpigotLog4j2Fix.getLogger().info("Failed to eject packet handler from " + player.getName() + ", are they already disconnected?");
+        }
+    }
 }

@@ -188,7 +188,7 @@ public class Util {
     @Nullable
     public static String removeSomething(@Nullable String input) {
         if (input == null) return null;
-        return input.replaceAll("(?i)\\$(\u00a7[0-9abcdefklmnorx])?\\{(.*):(.*)}", "");
+        return input.replaceAll("(?i)\\$([\u00a7&$][0-9abcdefklmnorx])?\\{(.*):(.*)}", "");
     }
 
     @Contract("null -> false")
