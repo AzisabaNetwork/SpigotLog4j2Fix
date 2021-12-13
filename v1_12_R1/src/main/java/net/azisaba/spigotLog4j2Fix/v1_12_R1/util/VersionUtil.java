@@ -149,7 +149,13 @@ public class VersionUtil {
             for (Object o : chatMessage.j()) {
                 if (o instanceof IChatBaseComponent) {
                     o = filterComponent((IChatBaseComponent) o);
-                    if (o != null) args.add(o);
+                    if (o != null) {
+                        args.add(o);
+                    } else {
+                        args.add(new ChatComponentText("?"));
+                    }
+                } else {
+                    args.add(o);
                 }
             }
             ChatModifier chatModifier = component.getChatModifier();
