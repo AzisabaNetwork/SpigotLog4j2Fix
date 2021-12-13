@@ -4,4 +4,3 @@ build/
 .gradle/
 **/test/**/*.java
 *.log
-**/test/**/*.java
