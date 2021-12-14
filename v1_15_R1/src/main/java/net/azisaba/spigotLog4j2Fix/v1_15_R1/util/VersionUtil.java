@@ -59,7 +59,6 @@ public class VersionUtil {
             if (packetData.modifyField("e", VersionUtil::filterComponent) == null) {
                 return Collections.emptyList(); // cancel packet
             }
-            System.err.println((Object) packetData.getField("e"));
         } else if (packet instanceof PacketPlayOutTitle) {
             if (packetData.getField("b") != null) {
                 if (packetData.modifyField("b", VersionUtil::filterComponent) == null) {

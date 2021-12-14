@@ -14,4 +14,10 @@ Also see [Log4j2Fix](https://github.com/AzisabaNetwork/Log4j2Fix) for more infor
 - 1.17.1
 - 1.16.5
 - 1.15.2
+- 1.14.4 (未テスト)
+- 1.13.2 (未テスト)
 - 1.12.2
+- 1.11.2 (未テスト)
+- 1.10.2 (未テスト)
+- 1.9.4 (未テスト)
+- 1.8.8/9 (未テスト)

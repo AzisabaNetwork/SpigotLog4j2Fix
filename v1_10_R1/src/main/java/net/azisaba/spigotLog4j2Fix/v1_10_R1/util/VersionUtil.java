@@ -1,36 +1,30 @@
-package net.azisaba.spigotLog4j2Fix.v1_16_R3.util;
+package net.azisaba.spigotLog4j2Fix.v1_10_R1.util;
 
-import com.mojang.datafixers.util.Pair;
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
 import net.azisaba.spigotLog4j2Fix.common.util.Util;
-import net.minecraft.server.v1_16_R3.ChatBaseComponent;
-import net.minecraft.server.v1_16_R3.ChatComponentText;
-import net.minecraft.server.v1_16_R3.ChatMessage;
-import net.minecraft.server.v1_16_R3.ChatModifier;
-import net.minecraft.server.v1_16_R3.EnumItemSlot;
-import net.minecraft.server.v1_16_R3.IChatBaseComponent;
-import net.minecraft.server.v1_16_R3.IChatMutableComponent;
-import net.minecraft.server.v1_16_R3.ItemStack;
-import net.minecraft.server.v1_16_R3.MerchantRecipe;
-import net.minecraft.server.v1_16_R3.MerchantRecipeList;
-import net.minecraft.server.v1_16_R3.NBTBase;
-import net.minecraft.server.v1_16_R3.NBTTagCompound;
-import net.minecraft.server.v1_16_R3.NBTTagList;
-import net.minecraft.server.v1_16_R3.NBTTagString;
-import net.minecraft.server.v1_16_R3.Packet;
-import net.minecraft.server.v1_16_R3.PacketPlayInChat;
-import net.minecraft.server.v1_16_R3.PacketPlayInItemName;
-import net.minecraft.server.v1_16_R3.PacketPlayOutChat;
-import net.minecraft.server.v1_16_R3.PacketPlayOutCombatEvent;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityEquipment;
-import net.minecraft.server.v1_16_R3.PacketPlayOutMapChunk;
-import net.minecraft.server.v1_16_R3.PacketPlayOutNBTQuery;
-import net.minecraft.server.v1_16_R3.PacketPlayOutOpenWindow;
-import net.minecraft.server.v1_16_R3.PacketPlayOutOpenWindowMerchant;
-import net.minecraft.server.v1_16_R3.PacketPlayOutSetSlot;
-import net.minecraft.server.v1_16_R3.PacketPlayOutTileEntityData;
-import net.minecraft.server.v1_16_R3.PacketPlayOutTitle;
-import net.minecraft.server.v1_16_R3.PacketPlayOutWindowItems;
+import net.minecraft.server.v1_10_R1.ChatBaseComponent;
+import net.minecraft.server.v1_10_R1.ChatComponentScore;
+import net.minecraft.server.v1_10_R1.ChatComponentSelector;
+import net.minecraft.server.v1_10_R1.ChatComponentText;
+import net.minecraft.server.v1_10_R1.ChatMessage;
+import net.minecraft.server.v1_10_R1.ChatModifier;
+import net.minecraft.server.v1_10_R1.IChatBaseComponent;
+import net.minecraft.server.v1_10_R1.ItemStack;
+import net.minecraft.server.v1_10_R1.NBTBase;
+import net.minecraft.server.v1_10_R1.NBTTagCompound;
+import net.minecraft.server.v1_10_R1.NBTTagList;
+import net.minecraft.server.v1_10_R1.NBTTagString;
+import net.minecraft.server.v1_10_R1.Packet;
+import net.minecraft.server.v1_10_R1.PacketPlayInChat;
+import net.minecraft.server.v1_10_R1.PacketPlayOutChat;
+import net.minecraft.server.v1_10_R1.PacketPlayOutCombatEvent;
+import net.minecraft.server.v1_10_R1.PacketPlayOutEntityEquipment;
+import net.minecraft.server.v1_10_R1.PacketPlayOutMapChunk;
+import net.minecraft.server.v1_10_R1.PacketPlayOutOpenWindow;
+import net.minecraft.server.v1_10_R1.PacketPlayOutSetSlot;
+import net.minecraft.server.v1_10_R1.PacketPlayOutTileEntityData;
+import net.minecraft.server.v1_10_R1.PacketPlayOutTitle;
+import net.minecraft.server.v1_10_R1.PacketPlayOutWindowItems;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,8 +53,10 @@ public class VersionUtil {
                 }
             }
         } else if (packet instanceof PacketPlayOutCombatEvent) {
-            if (packetData.modifyField("e", VersionUtil::filterComponent) == null) {
-                return Collections.emptyList(); // cancel packet
+            if (packetData.getField("e") != null) {
+                if (packetData.modifyField("e", VersionUtil::filterComponent) == null) {
+                    return Collections.emptyList(); // cancel packet
+                }
             }
         } else if (packet instanceof PacketPlayOutTitle) {
             if (packetData.getField("b") != null) {
@@ -69,37 +65,25 @@ public class VersionUtil {
                 }
             }
         } else if (packet instanceof PacketPlayOutWindowItems) {
-            for (ItemStack stack : packetData.<List<ItemStack>>getField("b")) {
+            for (ItemStack stack : packetData.<ItemStack[]>getField("b")) {
                 filterItemStack(stack);
             }
         } else if (packet instanceof PacketPlayOutOpenWindow) {
+            packetData.modifyField("b", Util::sanitizeString);
             if (packetData.getField("c") != null) {
                 if (packetData.modifyField("c", VersionUtil::filterComponent) == null) {
                     return Collections.emptyList();
                 }
             }
-        } else if (packet instanceof PacketPlayOutOpenWindowMerchant) {
-            for (MerchantRecipe merchantRecipe : packetData.<MerchantRecipeList>getField("b")) {
-                filterItemStack(merchantRecipe.buyingItem1);
-                filterItemStack(merchantRecipe.buyingItem2);
-                filterItemStack(merchantRecipe.sellingItem);
-            }
-        } else if (packet instanceof PacketPlayOutNBTQuery) {
-            filterNBTTagCompound(packetData.getField("b"));
         } else if (packet instanceof PacketPlayOutEntityEquipment) {
-            if (packetData.getField("b") != null) {
-                for (Pair<EnumItemSlot, ItemStack> pair : packetData.<List<Pair<EnumItemSlot, ItemStack>>>getField("b")) {
-                    filterItemStack(pair.getSecond());
-                }
-            }
+            filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutSetSlot) {
             filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutTileEntityData) {
             filterNBTTagCompound(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutMapChunk) {
-            filterNBTTagCompound(packetData.getField("d"));
-            if (packetData.getField("g") != null) {
-                for (NBTTagCompound tag : packetData.<List<NBTTagCompound>>getField("g")) {
+            if (packetData.getField("e") != null) {
+                for (NBTTagCompound tag : packetData.<List<NBTTagCompound>>getField("e")) {
                     filterNBTTagCompound(tag);
                 }
             }
@@ -110,8 +94,6 @@ public class VersionUtil {
     public static List<Object> processIncomingPacket(@NotNull PacketData packetData) {
         Packet<?> packet = packetData.getPacket();
         if (packet instanceof PacketPlayInChat) {
-            packetData.modifyField("a", Util::sanitizeString);
-        } else if (packet instanceof PacketPlayInItemName) {
             packetData.modifyField("a", Util::sanitizeString);
         }
         return Collections.singletonList(packet);
@@ -136,7 +118,8 @@ public class VersionUtil {
                 newMap.put(key, filterNBTBase(value));
             }
         });
-        Util.setField(NBTTagCompound.class, "map", tag, newMap);
+        map.clear();
+        map.putAll(newMap);
         return tag;
     }
 
@@ -144,14 +127,14 @@ public class VersionUtil {
     @Nullable
     public static NBTBase filterNBTBase(@Nullable NBTBase value) {
         if (value instanceof NBTTagString) {
-            if (Util.isTaintedString(value.asString())) {
-                return NBTTagString.a(Util.sanitizeString(value.asString()));
+            if (Util.isTaintedString(((NBTTagString) value).c_())) {
+                return new NBTTagString(Util.sanitizeString(((NBTTagString) value).c_()));
             }
         } else if (value instanceof NBTTagCompound) {
             return filterNBTTagCompound((NBTTagCompound) value);
         } else if (value instanceof NBTTagList) {
             NBTTagList newList = new NBTTagList();
-            for (NBTBase entry : (NBTTagList) value) {
+            for (NBTBase entry : Util.<List<NBTBase>>getField(NBTTagList.class, "list", value)) {
                 newList.add(filterNBTBase(entry));
             }
             return newList;
@@ -165,7 +148,7 @@ public class VersionUtil {
         if (component instanceof ChatMessage) {
             ChatMessage chatMessage = (ChatMessage) component;
             List<Object> args = new ArrayList<>();
-            for (Object o : chatMessage.getArgs()) {
+            for (Object o : chatMessage.j()) {
                 if (o instanceof IChatBaseComponent) {
                     o = filterComponent((IChatBaseComponent) o);
                     if (o != null) {
@@ -178,30 +161,30 @@ public class VersionUtil {
                 }
             }
             ChatModifier cm = component.getChatModifier();
-            component = new ChatMessage(Util.sanitizeString(chatMessage.getKey()), args.toArray());
-            ((ChatMessage) component).setChatModifier(cm);
+            component = new ChatMessage(Util.sanitizeString(chatMessage.i()), args.toArray());
+            component.setChatModifier(cm);
         }
         if (component instanceof ChatBaseComponent) {
             ChatBaseComponent chatBaseComponent = (ChatBaseComponent) component;
-            List<IChatBaseComponent> list = component.getSiblings().stream().map(VersionUtil::filterComponent).filter(Objects::nonNull).collect(Collectors.toList());
-            if (!Util.listEquals(list, chatBaseComponent.getSiblings())) {
-                component = chatBaseComponent.g();
+            List<IChatBaseComponent> list = component.a().stream().map(VersionUtil::filterComponent).filter(Objects::nonNull).collect(Collectors.toList());
+            if (!Util.listEquals(list, chatBaseComponent.a())) {
+                component = copyWithoutSiblings(chatBaseComponent);
                 // Add siblings
-                Util.<List<IChatBaseComponent>>getField(ChatBaseComponent.class, "siblings", component).clear();
-                for (IChatBaseComponent c : list) ((ChatBaseComponent) component).addSibling(c);
+                Util.<List<IChatBaseComponent>>getField(ChatBaseComponent.class, "a", component).clear();
+                for (IChatBaseComponent c : list) component.addSibling(c);
             }
         }
         if (component instanceof ChatComponentText) {
             ChatComponentText text = (ChatComponentText) component;
-            if (Util.isTaintedString(text.h())) {
+            if (Util.isTaintedString(text.getText())) {
                 ChatModifier cm = component.getChatModifier();
-                component = new ChatComponentText(Util.sanitizeString(text.h())).setChatModifier(text.getChatModifier());
-                ((IChatMutableComponent) component).setChatModifier(cm);
+                component = new ChatComponentText(Util.sanitizeString(text.getText())).setChatModifier(text.getChatModifier());
+                component.setChatModifier(cm);
             }
         }
-        if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {
+        if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.toPlainText()) || Util.isTaintedString(component.toString())) {
             try {
-                List<IChatBaseComponent> s = component.getSiblings();
+                List<IChatBaseComponent> s = component.a();
                 List<IChatBaseComponent> list = new ArrayList<>();
                 for (IChatBaseComponent iChatBaseComponent : s) {
                     list.add(filterComponent(iChatBaseComponent));
@@ -221,5 +204,39 @@ public class VersionUtil {
         } else {
             return component;
         }
+    }
+
+    @NotNull
+    public static ChatBaseComponent newInstance(@NotNull ChatBaseComponent component) {
+        if (component instanceof ChatComponentText) {
+            ChatComponentText c = (ChatComponentText) component;
+            return new ChatComponentText(Util.sanitizeString(c.g()));
+        } else if (component instanceof ChatComponentScore) {
+            ChatComponentScore c = (ChatComponentScore) component;
+            return new ChatComponentScore(Util.sanitizeString(c.g()), Util.sanitizeString(c.h()));
+        } else if (component instanceof ChatComponentSelector) {
+            ChatComponentSelector c = (ChatComponentSelector) component;
+            return new ChatComponentSelector(Util.sanitizeString(c.g()));
+        } else if (component instanceof ChatMessage) {
+            ChatMessage c = (ChatMessage) component;
+            return new ChatMessage(Util.sanitizeString(c.i()), c.j());
+        } else {
+            throw new RuntimeException("Unsupported ChatBaseComponent type: " + component.getClass().getTypeName());
+        }
+    }
+
+    @NotNull
+    public static ChatBaseComponent copy(@NotNull ChatBaseComponent component) {
+        ChatBaseComponent newComponent = newInstance(component);
+        for (IChatBaseComponent c : component.a()) newComponent.addSibling(c);
+        newComponent.setChatModifier(component.getChatModifier());
+        return newComponent;
+    }
+
+    @NotNull
+    public static ChatBaseComponent copyWithoutSiblings(@NotNull ChatBaseComponent component) {
+        ChatBaseComponent newComponent = newInstance(component);
+        newComponent.setChatModifier(component.getChatModifier());
+        return newComponent;
     }
 }
