@@ -41,6 +41,7 @@ public class Util {
         if (v.equals("v1_15_R1")) return v;
         if (v.equals("v1_16_R3")) return v;
         if (v.equals("v1_17_R1")) return "v1_17";
+        if (v.equals("v1_18_R1")) return "v1_18";
         throw new RuntimeException("Unsupported version: " + v);
     }
 

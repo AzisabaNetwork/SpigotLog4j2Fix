@@ -1,4 +1,4 @@
-package net.azisaba.spigotLog4j2Fix.v1_17.util;
+package net.azisaba.spigotLog4j2Fix.v1_18.util;
 
 import com.mojang.datafixers.util.Pair;
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
@@ -14,13 +14,14 @@ import net.minecraft.network.chat.ChatModifier;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.network.chat.IChatMutableComponent;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.PacketPlayInChat;
 import net.minecraft.network.protocol.game.PacketPlayInItemName;
 import net.minecraft.network.protocol.game.PacketPlayOutChat;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
-import net.minecraft.network.protocol.game.PacketPlayOutMapChunk;
 import net.minecraft.network.protocol.game.PacketPlayOutNBTQuery;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenWindow;
 import net.minecraft.network.protocol.game.PacketPlayOutOpenWindowMerchant;
@@ -70,6 +71,7 @@ public class VersionUtil {
             for (ItemStack stack : p.c()) {
                 filterItemStack(stack);
             }
+            filterItemStack(p.d());
         } else if (packet instanceof PacketPlayOutOpenWindow p) {
             if (p.d() != null) {
                 if (packetData.modifyField("c", VersionUtil::filterComponent) == null) {
@@ -94,15 +96,18 @@ public class VersionUtil {
             filterItemStack(packetData.getField("f"));
         } else if (packet instanceof PacketPlayOutTileEntityData p) {
             filterNBTTagCompound(p.d());
-        } else if (packet instanceof PacketPlayOutMapChunk p) {
-            filterNBTTagCompound(p.f());
-            if (p.g() != null) {
-                for (NBTTagCompound tag : p.g()) {
-                    filterNBTTagCompound(tag);
-                }
-            }
+        } else if (packet instanceof ClientboundLevelChunkWithLightPacket p) {
+            processChunkPacketData(p.d());
         }
         return Collections.singletonList(packet);
+    }
+
+    private static void processChunkPacketData(ClientboundLevelChunkPacketData p) {
+        filterNBTTagCompound(p.b());
+        List<?> list = Util.getField(null, "d", p);
+        for (Object o : list) {
+            filterNBTTagCompound(Util.getField(null, "d", o));
+        }
     }
 
     public static List<Object> processIncomingPacket(@NotNull PacketData packetData) {
@@ -119,7 +124,7 @@ public class VersionUtil {
     @Nullable
     public static ItemStack filterItemStack(@Nullable ItemStack item) {
         if (item == null) return null;
-        item.setTag(filterNBTTagCompound(item.getTag()));
+        item.c(filterNBTTagCompound(item.s()));
         return item;
     }
 
@@ -143,8 +148,8 @@ public class VersionUtil {
     @Nullable
     public static NBTBase filterNBTBase(@Nullable NBTBase value) {
         if (value instanceof NBTTagString stringTag) {
-            if (Util.isTaintedString(stringTag.asString())) {
-                return NBTTagString.a(Util.sanitizeString(stringTag.asString()));
+            if (Util.isTaintedString(stringTag.e_())) {
+                return NBTTagString.a(Util.sanitizeString(stringTag.e_()));
             }
         } else if (value instanceof NBTTagCompound compound) {
             return filterNBTTagCompound(compound);
@@ -163,7 +168,7 @@ public class VersionUtil {
         if (component == null) return null;
         if (component instanceof ChatMessage chatMessage) {
             List<Object> args = new ArrayList<>();
-            for (Object o : chatMessage.getArgs()) {
+            for (Object o : chatMessage.j()) {
                 if (o instanceof IChatBaseComponent) {
                     o = filterComponent((IChatBaseComponent) o);
                     //noinspection ReplaceNullCheck
@@ -176,29 +181,29 @@ public class VersionUtil {
                     args.add(o);
                 }
             }
-            ChatModifier cm = component.getChatModifier();
-            component = new ChatMessage(Util.sanitizeString(chatMessage.getKey()), args.toArray());
-            ((ChatMessage) component).setChatModifier(cm);
+            ChatModifier cm = component.c();
+            component = new ChatMessage(Util.sanitizeString(chatMessage.i()), args.toArray());
+            ((ChatMessage) component).a(cm);
         }
         if (component instanceof ChatBaseComponent chatBaseComponent) {
-            List<IChatBaseComponent> list = component.getSiblings().stream().map(VersionUtil::filterComponent).filter(Objects::nonNull).collect(Collectors.toList());
-            if (!Util.listEquals(list, chatBaseComponent.getSiblings())) {
+            List<IChatBaseComponent> list = component.b().stream().map(VersionUtil::filterComponent).filter(Objects::nonNull).collect(Collectors.toList());
+            if (!Util.listEquals(list, chatBaseComponent.b())) {
                 component = chatBaseComponent.g();
                 // Add siblings
                 Util.<List<IChatBaseComponent>>getField(ChatBaseComponent.class, "a", component).clear();
-                for (IChatBaseComponent c : list) ((ChatBaseComponent) component).addSibling(c);
+                for (IChatBaseComponent c : list) ((ChatBaseComponent) component).a(c);
             }
         }
         if (component instanceof ChatComponentText text) {
             if (Util.isTaintedString(text.h())) {
-                ChatModifier cm = component.getChatModifier();
-                component = new ChatComponentText(Util.sanitizeString(text.h())).setChatModifier(text.getChatModifier());
-                ((IChatMutableComponent) component).setChatModifier(cm);
+                ChatModifier cm = component.c();
+                component = new ChatComponentText(Util.sanitizeString(text.h())).a(text.c());
+                ((IChatMutableComponent) component).a(cm);
             }
         }
-        if (Util.isTaintedString(component.getText()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {
+        if (Util.isTaintedString(component.a()) || Util.isTaintedString(component.getString()) || Util.isTaintedString(component.toString())) {
             try {
-                List<IChatBaseComponent> s = component.getSiblings();
+                List<IChatBaseComponent> s = component.b();
                 List<IChatBaseComponent> list = new ArrayList<>();
                 for (IChatBaseComponent iChatBaseComponent : s) {
                     list.add(filterComponent(iChatBaseComponent));

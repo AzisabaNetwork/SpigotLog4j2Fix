@@ -1,6 +1,7 @@
 rootProject.name = "SpigotLog4j2Fix"
 include("plugin")
 include("common")
+include("v1_18")
 include("v1_17")
 include("v1_16_R3")
 include("v1_15_R1")

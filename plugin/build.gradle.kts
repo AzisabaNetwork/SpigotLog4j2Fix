@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":v1_18"))
     implementation(project(":v1_17"))
     implementation(project(":v1_16_R3"))
     implementation(project(":v1_15_R1"))
