@@ -117,7 +117,8 @@ public class VersionUtil {
                 newMap.put(key, filterNBTBase(value));
             }
         });
-        Util.setField(NBTTagCompound.class, "map", tag, newMap);
+        map.clear();
+        map.putAll(newMap);
         return tag;
     }
 
