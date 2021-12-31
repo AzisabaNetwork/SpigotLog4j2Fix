@@ -150,7 +150,7 @@ public class VersionUtil {
             return filterNBTTagCompound(compound);
         } else if (value instanceof NBTTagList list) {
             NBTTagList newList = new NBTTagList();
-            for (NBTBase entry : list) {
+            for (NBTBase entry : new ArrayList<>(list)) {
                 newList.add(filterNBTBase(entry));
             }
             return newList;
