@@ -75,7 +75,7 @@ public class VersionUtil {
                 }
             }
         } else if (packet instanceof PacketPlayOutEntityEquipment) {
-            filterItemStack(packetData.getField("c"));
+            //filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutSetSlot) {
             filterItemStack(packetData.getField("c"));
         } else if (packet instanceof PacketPlayOutTileEntityData) {
