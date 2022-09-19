@@ -2,7 +2,6 @@ package net.azisaba.spigotLog4j2Fix.common.packet.handler;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import net.azisaba.spigotLog4j2Fix.common.SpigotLog4j2Fix;
 import net.azisaba.spigotLog4j2Fix.common.packet.PacketData;
@@ -19,9 +18,10 @@ public class ChannelHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg.getClass().getSimpleName().contains("Packet")
+        if ((msg.getClass().getSimpleName().contains("Packet")
                 || msg.getClass().getSimpleName().contains("Clientbound")
-                || msg.getClass().getSimpleName().contains("Serverbound")) {
+                || msg.getClass().getSimpleName().contains("Serverbound"))
+                && !msg.getClass().getSimpleName().contains("PacketDataSerializer")) {
             try {
                 for (Object p : SpigotLog4j2Fix.getVersionDependant().processIncomingPacket(new PacketData(player, msg))) {
                     super.channelRead(ctx, p);
@@ -41,9 +41,10 @@ public class ChannelHandler extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg.getClass().getSimpleName().contains("Packet")
+        if ((msg.getClass().getSimpleName().contains("Packet")
                 || msg.getClass().getSimpleName().contains("Clientbound")
-                || msg.getClass().getSimpleName().contains("Serverbound")) {
+                || msg.getClass().getSimpleName().contains("Serverbound"))
+                && !msg.getClass().getSimpleName().contains("PacketDataSerializer")) {
             try {
                 for (Object p : SpigotLog4j2Fix.getVersionDependant().processOutgoingPacket(new PacketData(player, msg))) {
                     super.write(ctx, p, promise);
