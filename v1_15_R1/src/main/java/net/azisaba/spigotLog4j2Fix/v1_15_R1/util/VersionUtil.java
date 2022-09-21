@@ -126,7 +126,10 @@ public class VersionUtil {
         Map<String, NBTBase> newMap = new HashMap<>();
         map.forEach((key, value) -> {
             if (!Util.isTaintedString(key)) {
-                newMap.put(key, filterNBTBase(value));
+                NBTBase v = filterNBTBase(value);
+                if (v != null) {
+                    newMap.put(key, v);
+                }
             }
         });
         map.clear();
@@ -146,7 +149,10 @@ public class VersionUtil {
         } else if (value instanceof NBTTagList) {
             NBTTagList newList = new NBTTagList();
             for (NBTBase entry : new ArrayList<>((NBTTagList) value)) {
-                newList.add(filterNBTBase(entry));
+                NBTBase v = filterNBTBase(entry);
+                if (v != null) {
+                    newList.add(v);
+                }
             }
             return newList;
         }
